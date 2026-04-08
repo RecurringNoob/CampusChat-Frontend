@@ -5,7 +5,7 @@ import { DashboardSection } from '../Components/Dashboard/DashboardSection';
 import WelcomeBanner from '../Components/Dashboard/WelcomeBanner';
 import { PartyCard } from '../Components/Dashboard/PartyCard';
 import { StatCard } from '../Components/Dashboard/StatCard';
-
+import { useSelector } from 'react-redux';
 export default function Dashboard() {
   const recentConnections = [
     { name: 'Emma Watson', university: 'UCLA', major: 'Psychology', time: '2h ago' },
@@ -21,12 +21,14 @@ export default function Dashboard() {
   ];
 
   const focusAreas = ['Psychology', 'Computer Science', 'Biology', 'Jazz', 'Indie Rock', 'Hip-Hop', 'Film', 'Economics'];
+    const userData = useSelector((state) => state.auth.userData);
 
   return (
     <div className="flex min-h-screen bg-zinc-950 text-white">
       <Sidebar />
       <div className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-        <WelcomeBanner name="Jamie" />
+        {console.log(userData)}
+        <WelcomeBanner name="Jamie"/>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <StatCard title="Total Connections" value="128" icon={Users} trend="+12" trendLabel="this week" />

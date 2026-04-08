@@ -12,7 +12,14 @@ export const login = (email, password) =>
 export const resendOtp = (email) =>
   api.post('/auth/resend-otp', { email });
 
-export const logout = () => api.post('/auth/logout');
+export const logout = async () => {
+  try {
+    await api.post('/auth/logout', {}, { withCredentials: true });
+  } catch (err) {
+    console.log(err);
+  }
+  localStorage.removeItem('accessToken');
+};
 
 // Google OAuth – redirect to backend
 export const getGoogleAuthUrl = () =>

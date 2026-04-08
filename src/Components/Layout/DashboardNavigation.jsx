@@ -4,6 +4,7 @@ import { SearchBar } from './SearchBar';
 import Logo from './Logo';
 import { Link } from 'react-router-dom';
 import {User} from 'lucide-react'
+import LogoutBtn from './LogoutBtn';
 
 export function DashboardNavigation() {
   return (
@@ -15,7 +16,7 @@ export function DashboardNavigation() {
       <div className="flex items-center space-x-3">
         {/* Notification Panel Component */}
         <NotificationPanel />
-        
+        <LogoutBtn/>
         <div className="flex items-center space-x-2">
           <User alt="Profile" className="rounded-full w-8 h-8" />
           <span className="hidden md:inline text-sm font-medium">Jamie Edwards</span>

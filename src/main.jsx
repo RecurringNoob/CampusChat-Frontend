@@ -15,7 +15,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import WaitingRoom from './pages/WaitingRoom.jsx';
 import RandomChat from './pages/RandomChat.jsx';
 import AuthCallback from './pages/AuthCallback';         
-
+import VerifyOTP from './pages/VerifyOTP.jsx';
 import './index.css';
 
 // ── Store injection ───────────────────────────────────────────────────────
@@ -49,6 +49,7 @@ const router = createBrowserRouter([
         children: [
           { path: 'login',  element: <Login /> },
           { path: 'signup', element: <Signup /> },
+          { path: 'verify-otp', element: <VerifyOTP /> },
         ],
       },
 

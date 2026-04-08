@@ -3,12 +3,16 @@ import {
   BarChart2, Users, Settings, MessageSquare, 
   BookOpen, ChevronLeft, ChevronRight, LogOut 
 } from 'lucide-react';
-
+import { logout } from '../../store/authSlice';
+import { logout as logoutAPI } from '../../api/auth';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 export function Sidebar() {
   const [expanded, setExpanded] = useState(true);
   //let tab = current location and then use to initialize active tab
   const [activeTab, setActiveTab] = useState('home');
-  
+    const dispatch = useDispatch();
+  const navigate = useNavigate();
   const menuItems = [
     { id: 'home', label: 'Dashboard', icon: BarChart2, badge: null },
     { id: 'connections', label: 'Connections', icon: Users, badge: null },
@@ -16,7 +20,11 @@ export function Sidebar() {
     { id: 'streams', label: 'Scheduled Streams', icon: BookOpen, badge: null },
     { id: 'settings', label: 'Settings', icon: Settings, badge: null },
   ];
-  
+    const handleLogout = async () => {
+    await logoutAPI(); // clears cookie on backend
+    dispatch(logout); // clears redux
+    navigate('/'); // UI decides redirect
+  };
   return (
     <aside className={`
       ${expanded ? 'w-64' : 'w-20'} 
@@ -75,7 +83,7 @@ export function Sidebar() {
         <button className={`
           w-full flex items-center p-3 text-zinc-400 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors
           ${!expanded && 'justify-center'}
-        `}>
+        `} onClick={handleLogout}>
           <LogOut size={20} />
           {expanded && <span className="ml-3 font-medium">Sign Out</span>}
         </button>

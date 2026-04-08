@@ -44,8 +44,7 @@ const logoutUser = () => {
     _store.dispatch({ type: 'auth/logout' });
   }
 
-  // Optional: redirect to login (but let the caller decide)
-  window.location.href = '/login';
+  window.location.href = '/';
 };
 
 api.interceptors.response.use(
