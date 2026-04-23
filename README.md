@@ -6,7 +6,7 @@ A student-only random video chat platform for verified university members. Think
 
 ## Features
 
-- **Verified access** — registration restricted to `@lnmiit.ac.in` email addresses with OTP confirmation
+- **Verified access** — registration restricted to `@lnmiit.ac.in` email addresses with OTP confirmation(Guards Removed for demonstration puposes)
 - **Random video chat** — peer-to-peer WebRTC sessions matched server-side
 - **In-call tools** — text chat sidebar, screen sharing, mic/camera controls, device settings
 - **Watch parties** — synchronized YouTube viewing with host-controlled playback
