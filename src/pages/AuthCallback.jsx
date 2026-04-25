@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { login } from '../store/authSlice';
+import { updateSocketToken } from '../socket.js'; // ← added
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -12,7 +13,6 @@ export default function AuthCallback() {
   useEffect(() => {
     if (processed.current) return;
 
-    // Parse the URL fragment (everything after #)
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
     const accessToken = params.get('accessToken');
@@ -26,9 +26,9 @@ export default function AuthCallback() {
 
     if (accessToken) {
       processed.current = true;
-      // Store only the access token – refresh token is an httpOnly cookie
       localStorage.setItem('accessToken', accessToken);
       dispatch(login({ accessToken, userData: null }));
+      updateSocketToken(accessToken); // ← added
       navigate('/dashboard', { replace: true });
     } else {
       navigate('/login?error=missing_tokens');

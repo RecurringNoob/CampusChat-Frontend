@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail, Eye, EyeOff, Lock } from "lucide-react";
 import { login as loginApi, getGoogleAuthUrl } from "../api/auth";
 import { login } from "../store/authSlice";
+import { updateSocketToken } from "../socket.js"; // ← added
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -27,14 +28,16 @@ function Login() {
       // Store tokens and user in Redux (also persists to localStorage via slice)
       dispatch(login({ userData: user, accessToken, refreshToken }));
 
-      // Navigate to dashboard
+      // Authenticate the socket with the fresh token so RandomChat's
+      // updateSocketToken call is a no-op (token already matches).
+      updateSocketToken(accessToken); // ← added
+
       navigate("/dashboard");
     } catch (err) {
       const status = err.response?.status;
       const message = err.response?.data?.message;
 
       if (status === 403 && message === "EMAIL_NOT_VERIFIED") {
-        // Redirect to OTP verification page, passing the email
         navigate("/verify-otp", { state: { email } });
       } else {
         setError(message || "Login failed. Please check your credentials.");
@@ -45,7 +48,6 @@ function Login() {
   };
 
   const handleGoogleLogin = () => {
-    // Redirect to backend Google OAuth endpoint
     window.location.href = getGoogleAuthUrl();
   };
 

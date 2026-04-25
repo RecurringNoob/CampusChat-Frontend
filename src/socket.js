@@ -17,6 +17,7 @@ export const socket = io(SOCKET_URL, {
 
 // Optional: helper to update token dynamically (useful after login / refresh)
 export const updateSocketToken = (newToken) => {
+  if (socket.auth?.token === newToken && socket.connected) return;
   socket.auth = { token: newToken };
   if (socket.connected) {
     socket.disconnect();

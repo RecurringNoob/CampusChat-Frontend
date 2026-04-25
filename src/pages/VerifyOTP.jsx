@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, RefreshCw, ArrowLeft, ShieldCheck } from "lucide-react";
 import { verifyOtp, resendOtp } from "../api/auth";
 import { login } from "../store/authSlice";
+import { updateSocketToken } from "../socket.js"; // ← added
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 60; // seconds
@@ -43,7 +44,6 @@ export default function VerifyOTP() {
   }, [cooldown]);
 
   const handleChange = (index, value) => {
-    // Allow only digits
     const cleaned = value.replace(/\D/g, "").slice(-1);
     setError("");
 
@@ -51,12 +51,10 @@ export default function VerifyOTP() {
     newDigits[index] = cleaned;
     setDigits(newDigits);
 
-    // Auto-advance
     if (cleaned && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Auto-submit when all filled
     if (cleaned && index === OTP_LENGTH - 1) {
       const allFilled = newDigits.every((d) => d !== "");
       if (allFilled) {
@@ -109,7 +107,13 @@ export default function VerifyOTP() {
     try {
       const response = await verifyOtp(email, code);
       const { accessToken, refreshToken, user } = response.data;
+
       dispatch(login({ userData: user, accessToken, refreshToken }));
+
+      // Authenticate the socket immediately so it's ready when the user
+      // navigates to RandomChat — same pattern as Login.jsx.
+      updateSocketToken(accessToken); // ← added
+
       navigate("/dashboard");
     } catch (err) {
       const code = err.response?.data?.code;
@@ -123,7 +127,6 @@ export default function VerifyOTP() {
         setError(message || "Verification failed. Please try again.");
       }
 
-      // Clear digits on error
       setDigits(Array(OTP_LENGTH).fill(""));
       setTimeout(() => inputRefs.current[0]?.focus(), 0);
     } finally {
@@ -167,21 +170,18 @@ export default function VerifyOTP() {
 
   return (
     <div className="flex-1 flex items-center justify-center px-6 py-12 relative">
-      {/* Background gradient elements — consistent with Login/Signup */}
       <div className="absolute top-0 left-1/2 w-1/3 h-1/3 bg-emerald-500/20 rounded-full blur-3xl -translate-x-1/2" />
       <div className="absolute bottom-0 right-0 w-1/4 h-1/4 bg-purple-500/20 rounded-full blur-3xl" />
 
       <div className="w-full max-w-md z-10">
         <div className="bg-zinc-800/50 backdrop-blur-sm border border-zinc-700 rounded-2xl p-8 shadow-xl">
 
-          {/* Icon */}
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
               <ShieldCheck size={32} className="text-emerald-400" />
             </div>
           </div>
 
-          {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-2">Check your email</h2>
             <p className="text-zinc-400 text-sm leading-relaxed">
@@ -194,7 +194,6 @@ export default function VerifyOTP() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* OTP input grid */}
             <div className="flex justify-center gap-3 mb-6" onPaste={handlePaste}>
               {digits.map((digit, i) => (
                 <input
@@ -224,21 +223,18 @@ export default function VerifyOTP() {
               ))}
             </div>
 
-            {/* Error */}
             {error && (
               <div className="text-red-500 text-sm bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4 text-center">
                 {error}
               </div>
             )}
 
-            {/* Resend success */}
             {resendSuccess && !error && (
               <div className="text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 mb-4 text-center">
                 A new code has been sent to your email.
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={!isComplete || loading}
@@ -248,7 +244,6 @@ export default function VerifyOTP() {
             </button>
           </form>
 
-          {/* Resend */}
           <div className="mt-5 text-center">
             <p className="text-zinc-400 text-sm">
               Didn't receive it?{" "}
@@ -270,7 +265,6 @@ export default function VerifyOTP() {
             </p>
           </div>
 
-          {/* Back link */}
           <div className="mt-6 pt-6 border-t border-zinc-700 text-center">
             <Link
               to="/signup"

@@ -362,7 +362,9 @@ export const useWebRTC = ({
     if (socket.connected) {
       emit();
     } else {
+       socket.off('connect', emit);
       socket.once('connect', emit);
+      if (!socket.active) socket.connect(); 
       socket.connect();
     }
   }, [onError]);
