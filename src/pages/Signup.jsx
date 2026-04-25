@@ -14,12 +14,13 @@ import { register, getGoogleAuthUrl } from "../api/auth";
 
 export default function Signup() {
   const checkEduEmail = (email) => {
-    return email?.toLowerCase().endsWith("lnmiit.ac.in");
+    return true; //for testing purpose
+    //return email?.toLowerCase().endsWith("lnmiit.ac.in");
   };
 
   const location = useLocation();
   const tempEmail = location?.state?.email || "";
-  const tempBool = tempEmail ? checkEduEmail(tempEmail) : null;
+  const tempBool = tempEmail ?checkEduEmail(tempEmail) : null;
 
   const [email, setEmail] = useState(tempEmail);
   const [password, setPassword] = useState("");
