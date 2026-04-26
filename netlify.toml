@@ -4,13 +4,13 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://your-render-backend.onrender.com/api/:splat"
+  to = "https://campuschat-backend-akiu.onrender.com/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/socket.io/*"
-  to = "https://your-render-backend.onrender.com/socket.io/:splat"
+  to = "https://campuschat-backend-akiu.onrender.com/:splat"
   status = 200
   force = true
 
