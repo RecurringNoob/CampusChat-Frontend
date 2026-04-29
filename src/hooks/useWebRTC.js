@@ -3,26 +3,6 @@
  *
  * Lifecycle phases:
  *   IDLE → ACQUIRING_MEDIA → MATCHMAKING → MATCHED → WEBRTC_CONNECTING → CONNECTED_CALL
- *
- * Fixes applied on top of the original:
- *
- * 1. onTrack stream handling — each remote peer gets a stable MediaStream stored
- *    in a ref. Tracks are added to the existing stream object; only a counter bump
- *    triggers a React re-render.
- *
- * 2. findMatch socket timing — waits for 'connect' before emitting 'find-match'.
- *
- * 3. ICE connection state machine — 'disconnected' sets a 5 s recovery timer then
- *    calls restartIce(). 'failed' triggers a full offer-with-restart.
- *
- * 4. Offer guard — ignores offers when signalingState !== 'stable'.
- *
- * 5. Pending ICE candidates buffered per peer and flushed after setRemoteDescription.
- *
- * 6. Track toggles always read from localStreamRef (safe after stream replacement).
- *
- * 7. FIX: setLocalStream(null) called in cleanup so VideoGrid never shows a dead
- *    stream reference after unmount/remount.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -96,7 +76,6 @@ export const useWebRTC = ({
 
     return () => {
       cancelled = true;
-      // FIX: null out localStream state so VideoGrid never renders a dead stream
       localStreamRef.current?.getTracks().forEach((t) => {
         if (t.readyState !== 'ended') t.stop();
       });
@@ -123,7 +102,7 @@ export const useWebRTC = ({
     if (pcs.current[remoteId]) return pcs.current[remoteId];
 
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-    pcs.current[remoteId]    = pc;
+    pcs.current[remoteId]     = pc;
     senders.current[remoteId] = { video: null, audio: null };
 
     if (!remoteStreamRefs.current[remoteId]) {
@@ -303,7 +282,7 @@ export const useWebRTC = ({
       }
     };
 
-    const onServerError   = ({ code, message }) => {
+    const onServerError = ({ code, message }) => {
       console.error(`[Socket error] ${code}: ${message}`);
       onError?.({ code, message });
     };
@@ -333,10 +312,9 @@ export const useWebRTC = ({
       socket.off('match-timeout', onMatchTimeout);
 
       Object.values(pcs.current).forEach((pc) => pc.close());
-      pcs.current    = {};
+      pcs.current     = {};
       senders.current = {};
 
-      // FIX: also clean up the screen share stream if active
       screenStreamRef.current?.getTracks().forEach((t) => {
         if (t.readyState !== 'ended') t.stop();
       });
@@ -347,12 +325,13 @@ export const useWebRTC = ({
   /* ════════════════════════════════════════════════════
      PUBLIC ACTIONS
   ════════════════════════════════════════════════════ */
-  const findMatch = useCallback((meta) => {
-    if (!localStreamRef.current) {
-      onError?.({ code: 'MEDIA_NOT_READY', message: 'Camera/mic not ready yet' });
-      return;
-    }
 
+  // FIX: Removed the early-return guard on localStreamRef.current.
+  // The socket connection is now established by updateSocketToken() in
+  // RandomChat before findMatch is called, so we no longer need to call
+  // socket.connect() here. findMatch only needs to wait for 'connect'
+  // and then emit — waitForStream() inside onMatchFound_ handles media timing.
+  const findMatch = useCallback((meta) => {
     const emit = () => {
       if (meta) socket.emit('register-meta', meta);
       setPhase('MATCHMAKING');
@@ -362,12 +341,13 @@ export const useWebRTC = ({
     if (socket.connected) {
       emit();
     } else {
-       socket.off('connect', emit);
+      socket.off('connect', emit); // deduplicate listeners
       socket.once('connect', emit);
-      if (!socket.active) socket.connect(); 
-      socket.connect();
+      // Socket connection is managed by updateSocketToken in RandomChat.
+      // Only connect here as a fallback if somehow not active.
+      if (!socket.active) socket.connect();
     }
-  }, [onError]);
+  }, [onError]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendChatMessage = useCallback((text) => {
     const roomId = matchedRoomIdRef.current;
