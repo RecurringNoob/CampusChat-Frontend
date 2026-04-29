@@ -15,12 +15,11 @@ export const socket = io(SOCKET_URL, {
 });
 
 export const updateSocketToken = (newToken) => {
+  console.log('[Socket] updateSocketToken called, token:', newToken ? newToken.substring(0, 20) + '...' : 'NULL');
   if (socket.auth?.token === newToken && socket.connected) return;
   socket.auth = { token: newToken };
-  if (socket.connected) {
-    socket.disconnect();
-  }
-  socket.connect(); // ← always connect/reconnect with the new token
+  if (socket.connected) socket.disconnect();
+  socket.connect();
 };
 
 socket.on('connect', () => {
