@@ -1,16 +1,25 @@
-import { useRef,useEffect } from "react";
+
+import { useRef, useEffect } from "react";
+
 export default function VideoTile({ stream, isMuted, isVideoOff, name }) {
   const ref = useRef(null);
 
   useEffect(() => {
-    if (ref.current && stream) ref.current.srcObject = stream;
-  }, [stream,isVideoOff]);
+    if (ref.current && stream) {
+      ref.current.srcObject = stream;
+    }
+  }, [stream]);
 
   return (
     <div className="relative w-full h-full bg-zinc-800">
-      {!isVideoOff && (
-        <video ref={ref} autoPlay playsInline muted={isMuted} className="w-full h-full object-cover" />
-      )}
+      <video
+        ref={ref}
+        autoPlay
+        playsInline
+        muted={isMuted}
+        className="w-full h-full object-cover"
+        style={{ display: isVideoOff ? 'none' : 'block' }}
+      />
       {isVideoOff && (
         <div className="flex items-center justify-center h-full">
           <span className="text-2xl text-emerald-400">{name[0]}</span>
