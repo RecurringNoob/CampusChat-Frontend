@@ -114,6 +114,7 @@ export const useWebRTC = ({
     };
 
     pc.oniceconnectionstatechange = () => {
+    console.log('[WebRTC] ICE state:', pc.iceConnectionState, 'remoteId:', remoteId);
       const state = pc.iceConnectionState;
       setConnectionStates((prev) => ({ ...prev, [remoteId]: state }));
 
@@ -142,6 +143,7 @@ export const useWebRTC = ({
     };
 
     pc.ontrack = ({ track }) => {
+    console.log('[WebRTC] ontrack fired, kind:', track.kind, 'remoteId:', remoteId);
       const stream = remoteStreamRefs.current[remoteId];
       if (!stream) return;
       if (!stream.getTracks().find((t) => t.id === track.id)) {
