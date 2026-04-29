@@ -5,7 +5,6 @@ import { RouterProvider, createBrowserRouter, Navigate } from 'react-router-dom'
 
 import store from './store/store.js';
 import { injectStore } from './api/axios.js';
-import { updateSocketToken } from './socket.js'; // ← added
 import { ProtectedRoute, GuestRoute } from './Components/RouteGuard/RouteGuard.jsx';
 
 import App from './App.jsx';
@@ -36,7 +35,10 @@ if (storedToken) {
   });
 
   // ← added: authenticate socket at startup so it's ready immediately
-  updateSocketToken(storedToken);
+  //updateSocketToken(storedToken);
+    // ← REMOVE the updateSocketToken(storedToken) call that was here.
+  // The token may be expired. RandomChat verifies it via /auth/me first,
+  // then calls updateSocketToken with a guaranteed-fresh token
 }
 
 // ── Router ────────────────────────────────────────────────────────────────
