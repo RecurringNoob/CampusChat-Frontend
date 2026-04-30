@@ -7,12 +7,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { socket } from '../socket.js';
-
-const ICE_SERVERS = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-];
-
+import api from '../api/axios.js';
 export const useWebRTC = ({
   isMuted        = false,
   isVideoOff     = false,
@@ -39,7 +34,9 @@ export const useWebRTC = ({
   const screenStreamRef  = useRef(null);
   const matchedRoomIdRef = useRef(null);
   const remoteStreamRefs = useRef({});
-
+  const iceServersRef    = useRef([          // ← replaces hardcoded ICE_SERVERS
+    { urls: 'stun:stun.l.google.com:19302' },
+  ]);
   const _setMatchedRoomId = useCallback((id) => {
     matchedRoomIdRef.current = id;
     setMatchedRoomId(id);
@@ -101,7 +98,7 @@ export const useWebRTC = ({
   const createPeerConnection = useCallback((roomId, remoteId) => {
     if (pcs.current[remoteId]) return pcs.current[remoteId];
 
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const pc = new RTCPeerConnection({ iceServers: iceServersRef.current }); // ← uses ref
     pcs.current[remoteId]     = pc;
     senders.current[remoteId] = { video: null, audio: null };
 
@@ -334,7 +331,16 @@ export const useWebRTC = ({
   // socket.connect() here. findMatch only needs to wait for 'connect'
   // and then emit — waitForStream() inside onMatchFound_ handles media timing.
   const findMatch = useCallback((meta) => {
-    const emit = () => {
+    const emit = async () => {
+      // ← fetch TURN credentials before doing anything
+      try {
+        const { data } = await api.get('/auth/ice-config');
+        iceServersRef.current = data.iceServers;
+        console.log('[WebRTC] ICE config fetched, servers:', data.iceServers.length);
+      } catch (err) {
+        console.warn('[WebRTC] Could not fetch ICE config, using STUN only:', err.message);
+      }
+
       if (meta) socket.emit('register-meta', meta);
       setPhase('MATCHMAKING');
       socket.emit('find-match');
@@ -343,13 +349,11 @@ export const useWebRTC = ({
     if (socket.connected) {
       emit();
     } else {
-      socket.off('connect', emit); // deduplicate listeners
+      socket.off('connect', emit);
       socket.once('connect', emit);
-      // Socket connection is managed by updateSocketToken in RandomChat.
-      // Only connect here as a fallback if somehow not active.
       if (!socket.active) socket.connect();
     }
-  }, [onError]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); 
 
   const sendChatMessage = useCallback((text) => {
     const roomId = matchedRoomIdRef.current;
